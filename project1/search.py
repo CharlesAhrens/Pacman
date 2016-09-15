@@ -129,59 +129,27 @@ def breadthFirstSearch(problem):
     [2nd Edition: p 73, 3rd Edition: p 82]
     """
     "*** YOUR CODE HERE ***"
-    expanded = {}
-    deadEnd = {}
-    path = []
-    stateStack = util.Stack()
+    isVisited = {}
+    path = {}
 
-    currentState = problem.getStartState()
-    stateStack.push((currentState, None, 1))
-    backtrackOutOfLoop = 0
-    isBackTracking = False
-    while not stateStack.isEmpty():
-        #print(path)
-        currentState = stateStack.pop()
-        expanded[currentState[0]] = True
-        if isBackTracking:
-            del path[-1]
-            isBackTracking = False
-        else:
-            path.append(currentState[1])
-        successors = problem.getSuccessors(currentState[0])
-       
-        successors = [x for x in successors if not deadEnd.has_key(x[0])]
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        return makePath(path, startState, startState)
+    stateQueue = util.Queue()
+    stateQueue.push((startState, None, 1, startState))
+    while not stateQueue.isEmpty():
+        currentState, action, cost, previousState = stateQueue.pop()
+        path[currentState] = (previousState, action, cost)
+        if problem.isGoalState(currentState):
+            return makePath(path, startState, currentState)
+        isVisited[currentState] = True
 
-        # check if goal state
-        if problem.isGoalState(currentState[0]):
-            return path[1:]
-
-        # Check if dead end.
-        # Dead end if len(successors) == 1 && not goal
-        # All successors are dead ends
-        if len(successors) == 1 and expanded.has_key(successors[0][0]):
-            # this is dead end.
-            #print("\nis in dead end\n")
-            deadEnd[currentState[0]] = True
-            stateStack.push(successors[0])
-            isBackTracking = True
-            continue
-
-        allExpandedOrDeadEnds = True
-        for successor in problem.getSuccessors(currentState[0]):
-            if deadEnd.has_key(successor[0]) or expanded.has_key(successor[0]):
+        for (s, a, c) in problem.getSuccessors(currentState):
+            if isVisited.has_key(s):
                 continue
-            stateStack.push(successor)
-            allExpandedOrDeadEnds = False
-        #allExpandedOrDeadEnds means we are dealing with a loop
-        if allExpandedOrDeadEnds:
-            backtrackOutOfLoop = backtrackOutOfLoop+1
-            deadEnd[currentState[0]] = True
-            successor = [x for x in successors if x[1] == Directions.REVERSE[path[-backtrackOutOfLoop]]][0]
-            isBackTracking = True
-            stateStack.push(successor)
-        else:
-            backtrackOutOfLoop = 0
-    util.raiseNotDefined()
+            stateQueue.push((s, a, c, currentState))
+
+
 
 def uniformCostSearch(problem):
     "Search the node of least total cost first. "
