@@ -78,96 +78,50 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
-    #isVisited = {}
-    #currentState = problem.getStartState()
-    #if problem.isGoalState(currentState[0]):
-    #    return []
-    #path = []
-    #for successor in problem.getSuccessors(currentState):
-    #    if successor[0] == currentState[0]:
-    #        continue
-    #    success, directions = dfsRecursive(problem, successor)
-    #    if success:
-    #        path += directions
-    #print path   
-    #return path
+    isVisited = {}
+    path = {}
 
-    expanded = {}
-    deadEnd = {}
-    path = []
+    startState = problem.getStartState()
+    if problem.isGoalState(startState):
+        return makePath(path, startState, startState)
     stateStack = util.Stack()
-
-    currentState = problem.getStartState()
-    stateStack.push((currentState, None, 1))
-    backtrackOutOfLoop = 0
-    isBackTracking = False
+    stateStack.push((startState, None, 1, startState))
     while not stateStack.isEmpty():
-        #print(path)
-        currentState = stateStack.pop()
-        expanded[currentState[0]] = True
-        if isBackTracking:
-            del path[-1]
-            isBackTracking = False
-        else:
-            path.append(currentState[0])
-        successors = problem.getSuccessors(currentState[0])
-       
-        successors = [x for x in successors if not deadEnd.has_key(x[0])]
+        currentState, action, cost, previousState = stateStack.pop()
+        path[currentState] = (previousState, action, cost)
+        if problem.isGoalState(currentState):
+            return makePath(path, startState, currentState)
+        isVisited[currentState] = True
 
-        # check if goal state
-        if problem.isGoalState(currentState[0]):
-            return path[1:]
-
-        # Check if dead end.
-        # Dead end if len(successors) == 1 && not goal
-        # All successors are dead ends
-        if len(successors) == 1 and expanded.has_key(successors[0][0]):
-            # this is dead end.
-            #print("\nis in dead end\n")
-            deadEnd[currentState[0]] = True
-            stateStack.push(successors[0])
-            isBackTracking = True
-            continue
-
-        allExpandedOrDeadEnds = True
-        for successor in problem.getSuccessors(currentState[0]):
-            if deadEnd.has_key(successor[0]) or expanded.has_key(successor[0]):
+        for (s, a, c) in problem.getSuccessors(currentState):
+            if isVisited.has_key(s):
                 continue
-            stateStack.push(successor)
-            allExpandedOrDeadEnds = False
-        #allExpandedOrDeadEnds means we are dealing with a loop
-        if allExpandedOrDeadEnds:
-            backtrackOutOfLoop = backtrackOutOfLoop+1
-            deadEnd[currentState[0]] = True
-            successor = [x for x in successors if x[1] == Directions.REVERSE[path[-backtrackOutOfLoop]]][0]
-            isBackTracking = True
-            stateStack.push(successor)
-        else:
-            backtrackOutOfLoop = 0
-           
+            stateStack.push((s, a, c, currentState))
+
+
 
         
              
+def makePath(path, startState, goalState):
+    """
+    makePath takes a dictionary in the form of an adjacency list in which
+    the value associated with the key is the state, action, and cost to get
+    to that key.
+    """
+    toReturn = []
+    if startState == goalState:
+        return toReturn
 
-isVisited = {}
-def dfsRecursive(problem, node) :
-    isVisited[node[0]] = True
-    path = [node[1]]
-    if node[0] == None:
-        return (False, path)
-    if problem.isGoalState(node[0]):
-        return (True, path)
-    if len(problem.getSuccessors(node[0])) == 0:
-        return (False, path)
+    currentState = goalState
+    while True:
+        previousState, action, cost = path[currentState]
+        toReturn.append(action)
+        if previousState == startState:
+            toReturn.reverse()
+            return toReturn
+        currentState = previousState
 
-    for successor in problem.getSuccessors(node[0]):
-        if successor[0] in isVisited:
-            continue
-        success, directions = dfsRecursive(problem, successor)
-        if success:
-            return (success, path + directions)
 
-    return False, path
 
 def breadthFirstSearch(problem):
     """
