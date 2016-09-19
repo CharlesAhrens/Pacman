@@ -130,31 +130,69 @@ def breadthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     isVisited = {}
+    inFringe = {}
     path = {}
 
     startState = problem.getStartState()
-    if problem.isGoalState(startState):
-        return makePath(path, startState, startState)
     stateQueue = util.Queue()
     stateQueue.push((startState, None, 1, startState))
+    inFringe[startState] = True
+
     while not stateQueue.isEmpty():
+        
         currentState, action, cost, previousState = stateQueue.pop()
+        inFringe.pop(currentState,None)
         path[currentState] = (previousState, action, cost)
+        isVisited[currentState] = True
         if problem.isGoalState(currentState):
             return makePath(path, startState, currentState)
-        isVisited[currentState] = True
-
+        
         for (s, a, c) in problem.getSuccessors(currentState):
-            if isVisited.has_key(s):
+
+            if isVisited.has_key(s) or inFringe.has_key(s):
                 continue
             stateQueue.push((s, a, c, currentState))
+            inFringe[s] = True
 
 
 
 def uniformCostSearch(problem):
     "Search the node of least total cost first. "
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    isVisited = {}
+    inFringe = {}
+    distances = {}
+    path = {}
+
+    startState = problem.getStartState()
+
+    if problem.isGoalState(startState):
+        return makePath(path, startState, startState)
+
+    
+    stateStack = util.PriorityQueue()
+    stateStack.push((startState, None, 1, startState), 0)
+    inFringe[startState] = True
+
+    distances[startState] = 0
+    while not stateStack.isEmpty():
+        currentState, action, cost, previousState = stateStack.pop()
+        inFringe.pop(currentState,None)
+        path[currentState] = (previousState, action, cost)
+        if problem.isGoalState(currentState):
+            return makePath(path, startState, currentState)
+        isVisited[currentState] = True
+
+        for (s, a, c) in problem.getSuccessors(currentState):
+            distance = distances.get(s, float("inf"))
+            alt = distances[currentState] + c
+            if (isVisited.has_key(s) or inFringe.has_key(s)) and alt > distance:
+                continue
+            if alt <= distance:
+                distances[s] = alt
+                distance = alt
+            stateStack.push((s, a, c, currentState), distance)
+            inFringe[s] = True
 
 def nullHeuristic(state, problem=None):
     """
@@ -164,9 +202,51 @@ def nullHeuristic(state, problem=None):
     return 0
 
 def aStarSearch(problem, heuristic=nullHeuristic):
-    "Search the node that has the lowest combined cost and heuristic first."
+    "Search the node of least total cost first. "
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    isVisited = {}
+    inFringe = {}
+    fScore = {}
+    gScore = {}
+    path = {}
+
+    startState = problem.getStartState()
+
+    if problem.isGoalState(startState):
+        return makePath(path, startState, startState)
+    
+    stateStack = util.PriorityQueue()
+    stateStack.push((startState, None, 0, startState), 0)
+
+    inFringe[startState] = True
+
+    fScore[startState] = 0
+    gScore[startState] = 0
+    while not stateStack.isEmpty():
+        currentState, action, cost, previousState = stateStack.pop()
+        inFringe.pop(currentState,None)
+
+        path[currentState] = (previousState, action, cost)
+        if problem.isGoalState(currentState):
+            return makePath(path, startState, currentState)
+        isVisited[currentState] = True
+
+        for (s, a, c) in problem.getSuccessors(currentState):
+            g = gScore.get(s, float("inf"))
+            tent_g = gScore[currentState] + c
+            if isVisited.has_key(s):
+                continue
+            if not inFringe.has_key(s):
+                inFringe[s] = True
+            elif tent_g >= g:
+                continue
+
+            gScore[s] = tent_g
+            fScore[s] = gScore[s] + heuristic(s, problem)
+            stateStack.push((s, a, c, currentState), fScore[s])
+        
+    return []
+
 
 
 # Abbreviations

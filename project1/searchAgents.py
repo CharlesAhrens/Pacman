@@ -270,22 +270,29 @@ class CornersProblem(search.SearchProblem):
         self.startingPosition = startingGameState.getPacmanPosition()
         top, right = self.walls.height-2, self.walls.width-2
         self.corners = ((1,1), (1,top), (right, 1), (right, top))
+        self.costFn = lambda x: 1
         for corner in self.corners:
             if not startingGameState.hasFood(*corner):
                 print 'Warning: no food in corner ' + str(corner)
-        self._expanded = 0 # Number of search nodes expanded
+        #self._expanded = 0 # Number of search nodes expanded
 
+        self._visited, self._visitedlist, self._expanded = {}, [], 0
         "*** YOUR CODE HERE ***"
+        self.cornersDict = {(1,1): 1, (1,top): 2, (right, 1): 3, (right, top): 4}
+        self.startingState = (self.startingPosition,  False,  False,  False,  False)
+
 
     def getStartState(self):
         "Returns the start state (in your state space, not the full Pacman state space)"
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.startingState
+       
 
     def isGoalState(self, state):
         "Returns whether this search state is a goal state of the problem"
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        pos, bottomLeft, topLeft, bottomRight, topRight  = state
+        return bottomLeft and topLeft and bottomRight and topRight
 
     def getSuccessors(self, state):
         """
@@ -309,8 +316,33 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            pos, bottomLeft, topLeft, bottomRight, topRight  = state
+            x, y = pos
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                
+                key = self.cornersDict.get((nextx, nexty), 0)
+                if key == 1:
+                    bottomLeft = True
+                if key == 2:
+                    topLeft = True
+                if key == 3:
+                    bottomRight = True
+                if key == 4:
+                    topRight = True
 
+                    
+                nextState = ((nextx, nexty), bottomLeft, topLeft, bottomRight, topRight)
+                cost = self.costFn(nextState)
+                successors.append( ( nextState, action, cost) )
+
+        # Bookkeeping for display purposes
         self._expanded += 1
+        if state not in self._visited:
+            self._visited[state] = True
+            self._visitedlist.append(state)
+
         return successors
 
     def getCostOfActions(self, actions):
@@ -340,11 +372,40 @@ def cornersHeuristic(state, problem):
     on the shortest path from the state to a goal of the problem; i.e.
     it should be admissible (as well as consistent).
     """
-    corners = problem.corners # These are the corner coordinates
+    allCorners = problem.corners # These are the corner coordinates
+    corners = []
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
+    
+    if problem.isGoalState(state):
+        return 0
 
-    "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    total = 0
+    # manhattan sum
+    xy1 = state[0]
+    cornerVisited = state[1:]
+    for i in range(4):
+        if cornerVisited[i] == False:
+            corners.append(allCorners[i])
+
+    numCorners = len(corners)
+
+    for i in range(numCorners):
+        distances = util.PriorityQueue()
+        
+        for j in range(len(corners)):
+            corner = corners[j]
+            xy2 = corner
+            cost = abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+            distances.push((corner, cost, j), cost)
+
+        closestCorner, cost, index = distances.pop()
+
+        xy1 = closestCorner
+        total = total + cost
+        corners = corners[:index] + corners[index+1:]
+        
+    return total
+  
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -435,7 +496,38 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+   
+
+    total = 0
+    if problem.isGoalState(state):
+        return 0
+    
+    points = foodGrid.asList()
+    allPoints = foodGrid.asList()
+    numPoints = len(points)
+    # manhattan sum
+    xy1 = position
+    for i in range(numPoints):
+        distances = util.PriorityQueue()
+        for j in range(len(points)):
+            point = points[j]
+            xy2 = point
+            cost = abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+            distances.push((point, cost, j), cost)
+        closestPoint, cost, index = distances.pop()
+        xy1 = closestPoint
+        total = total + cost
+        points = points[:index] + points[index+1:]
+        
+    return total
+
+    # manhattan sum
+    xy1 = position
+    for xy2 in foodGrid.asList():
+            total = total + abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+            xy1 = xy2
+  
+    return total
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -462,8 +554,9 @@ class ClosestDotSearchAgent(SearchAgent):
         walls = gameState.getWalls()
         problem = AnyFoodSearchProblem(gameState)
 
+        return search.aStarSearch(problem, search.nullHeuristic)
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -484,7 +577,6 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         "Stores information from the gameState.  You don't need to change this."
         # Store the food for later reference
         self.food = gameState.getFood()
-
         # Store info for the PositionSearchProblem (no need to change this)
         self.walls = gameState.getWalls()
         self.startState = gameState.getPacmanPosition()
@@ -496,10 +588,11 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         The state is Pacman's position. Fill this in with a goal test
         that will complete the problem definition.
         """
-        x,y = state
-
+        if state in self.food.asList():
+            return True
+        else:
+            return False
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
 
 ##################
 # Mini-contest 1 #
