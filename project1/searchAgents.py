@@ -280,8 +280,8 @@ class CornersProblem(search.SearchProblem):
         "*** YOUR CODE HERE ***"
         self.cornersDict = {(1,1): 1, (1,top): 2, (right, 1): 3, (right, top): 4}
         self.startingState = (self.startingPosition,  False,  False,  False,  False)
-
-
+        
+    
     def getStartState(self):
         "Returns the start state (in your state space, not the full Pacman state space)"
         "*** YOUR CODE HERE ***"
@@ -496,38 +496,87 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-   
+    
+    #without walls
+    #total = 0
+    
+    #xy1 = position
+    #points = foodGrid.asList()
+    #total = len(search.bfs(problem)) 
+    #print total
+    #return total
+
 
     total = 0
     if problem.isGoalState(state):
         return 0
-    
+  
     points = foodGrid.asList()
-    allPoints = foodGrid.asList()
-    numPoints = len(points)
+    
+    #distances = util.PriorityQueue()
+    ##decrease = util.PriorityQueue()
+    ##increase = util.PriorityQueue()
+    
+    #xy1 = position
+    
+        #increase.push(xy2, cost)
+        #decrease.push(xy2, 99999 - cost)
+    
+    #xy1 = distances.pop()
+    #xy1 = increase.pop()
+    #xy2 = decrease.pop()
+
+    #return abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
     # manhattan sum
+    numPoints = len(points)
     xy1 = position
     for i in range(numPoints):
         distances = util.PriorityQueue()
         for j in range(len(points)):
             point = points[j]
             xy2 = point
-            cost = abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+            cost = mazeDistance(xy1, xy2, problem.startingGameState)
             distances.push((point, cost, j), cost)
         closestPoint, cost, index = distances.pop()
         xy1 = closestPoint
         total = total + cost
         points = points[:index] + points[index+1:]
-        
     return total
+    
+    
 
-    # manhattan sum
-    xy1 = position
-    for xy2 in foodGrid.asList():
-            total = total + abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
-            xy1 = xy2
+
+
+    #total = 0
+    #if problem.isGoalState(state):
+    #    return 0
+    
+    #points = foodGrid.asList()
+    #allPoints = foodGrid.asList()
+    #numPoints = len(points)
+    ## manhattan sum
+    #xy1 = position
+    #for i in range(numPoints):
+    #    distances = util.PriorityQueue()
+    #    for j in range(len(points)):
+    #        point = points[j]
+    #        xy2 = point
+    #        cost = abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+    #        distances.push((point, cost, j), cost)
+    #    closestPoint, cost, index = distances.pop()
+    #    xy1 = closestPoint
+    #    total = total + cost
+    #    points = points[:index] + points[index+1:]
+        
+    #return total
+
+    ## manhattan sum
+    #xy1 = position
+    #for xy2 in foodGrid.asList():
+    #        total = total + abs(xy1[0] - xy2[0]) + abs(xy1[1] - xy2[1])
+    #        xy1 = xy2
   
-    return total
+    #return total
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
