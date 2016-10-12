@@ -217,7 +217,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
     for action in filter(filterStop, gameState.getLegalActions(0)):
        nextGameState = gameState.generateSuccessor(0, action)
        score = minValue(1, 0, nextGameState)
-       print "score", score
+
        if score > bestScore:
             bestScore = score 
             bestAction = action
@@ -236,6 +236,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     numberOfAgents = gameState.getNumAgents()    
     filterStop = lambda x: x != Directions.STOP
     maxDepth = self.depth
+    score = 0
+
     def maxValue(index, depth, gameState, alpha, beta):    
         if depth >= maxDepth:
             return (self.evaluationFunction(gameState), None)
@@ -292,6 +294,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
       legal moves.
     """
     "*** YOUR CODE HERE ***"
+
+
     numberOfAgents = gameState.getNumAgents()    
     filterStop = lambda x: x != Directions.STOP
     maxDepth = self.depth
@@ -346,7 +350,28 @@ def betterEvaluationFunction(currentGameState):
     DESCRIPTION: <write something here so we know what you did>
   """
   "*** YOUR CODE HERE ***"
-  util.raiseNotDefined()
+
+if currentGameState.isLose():
+    return -float("inf")
+
+if currentGameState.isWin():
+    return -float("inf")
+
+currentScore = scoreEvaluationFunction(currentGameState)
+   
+food = currentGameState.getFood.asList()
+foodDist = searchAgents.ClosestDotSearchAgent.findPathToClosestDot(currentGameState)
+
+for ghost in currentGameState.getGhostStates():
+    if ghost.scaredTimer > 0:
+        scared.append(ghost)
+    else:
+        active.append(ghost)
+
+
+
+
+
 
 # Abbreviation
 better = betterEvaluationFunction
