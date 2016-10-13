@@ -176,6 +176,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns the total number of agents in the game
     """
     "*** YOUR CODE HERE ***"
+    numberOfAgents = gameState.getNumAgents()
+    filterStop = lambda x: x != Directions.STOP
+    maxDepth = self.depth
     def minimax(gameState, depth, index):
         if depth == 0 or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
