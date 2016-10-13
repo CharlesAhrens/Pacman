@@ -14,7 +14,7 @@
     <InterpreterId />
     <InterpreterVersion />
     <IsWindowsApplication>False</IsWindowsApplication>
-    <CommandLineArguments>-l smallClassic -p ExpectimaxAgent -a evalFn=better  -n 10 --frameTime 0</CommandLineArguments>
+    <CommandLineArguments>-l smallClassic -p ExpectimaxAgent -a evalFn=better -n 10 --frameTime 0</CommandLineArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
