@@ -330,6 +330,16 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             bestAction = action
     return bestAction
 
+def testfunc(currentGameState):
+    """
+    test
+    """
+    if currentGameState.isLose():
+        return -50000000
+    elif currentGameState.isWin():
+        return 50000000
+
+    food = currentGameState.getFood().asList()
 
 
 
@@ -358,9 +368,9 @@ def betterEvaluationFunction(currentGameState):
     ghostStates = currentGameState.getGhostStates()
 
     if currentGameState.isLose():
-        return -float("inf")
+        return -50000000
     elif currentGameState.isWin():
-        return +float("inf")
+        return 50000000
 
     scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
 
@@ -390,7 +400,7 @@ def betterEvaluationFunction(currentGameState):
     freedomReward = 20*freedomTime
 
     chaseGhostPosTime = [float(time) - manhattanDistance(currentPos, pos) for (pos, time) in ghostPosTime if time > 0]
-    chaseReward = 0
+    #chaseReward = 0
     if len(chaseGhostPosTime) > 0:
         chaseReward = 100 * max(chaseGhostPosTime)
 
@@ -404,8 +414,8 @@ def betterEvaluationFunction(currentGameState):
 
 
     #print "pos %s action %s ateFoodReward %i eatenByGhost %i ghostDistanceReward %i freedomReward %i chaseReward %i foodDistanceReward %i" %(currentGameState.getPacmanPosition(),action,ateFoodReward,eatenByGhostReward,ghostDistanceReward, freedomReward, chaseReward, foodDistanceReward)
-    print "ghostDistanceReward %i freedomReward %i chaseReward %i foodDistanceReward %i current score %i" %(ghostDistanceReward, freedomReward, chaseReward, foodDistanceReward, currentScore)
-    return 2*ghostDistanceReward + 2*foodDistanceReward + freedomReward + chaseReward + 4*currentScore + lastScore
+    #print "ghostDistanceReward %i freedomReward %i chaseReward %i foodDistanceReward %i current score %i" %(ghostDistanceReward, freedomReward, chaseReward, foodDistanceReward, currentScore)
+    return 2*ghostDistanceReward + 4*foodDistanceReward + currentScore + lastScore
 
   #if currentGameState.isLose():
   #  return -float("inf")
@@ -496,7 +506,7 @@ def betterEvaluationFunction(currentGameState):
 
 # Abbreviation
 better = betterEvaluationFunction
-
+#better = testfunc
 class ContestAgent(MultiAgentSearchAgent):
   """
     Your agent for the mini-contest
