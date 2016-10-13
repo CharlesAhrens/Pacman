@@ -331,7 +331,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             nextIndex = (index + 1) % numberOfAgents
             p = 1/float(len(actions))
             score = value(nextIndex, depth+1, gameState)
-            currentScore = currentScore + p * score
+            currentScore = currentScore + (p * score)
         return currentScore
 
     bestScore = -float("inf")
@@ -344,7 +344,17 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             bestAction = action
     return bestAction
 
+def testfunc(currentGameState):
+    """
+    test
+    """
+    if currentGameState.isLose():
+        return -50000000
+    elif currentGameState.isWin():
+        return 50000000
 
+    food = currentGameState.getFood().asList()
+    
 
 
 def betterEvaluationFunction(currentGameState):
@@ -419,7 +429,7 @@ def betterEvaluationFunction(currentGameState):
 
     #print "pos %s action %s ateFoodReward %i eatenByGhost %i ghostDistanceReward %i freedomReward %i chaseReward %i foodDistanceReward %i" %(currentGameState.getPacmanPosition(),action,ateFoodReward,eatenByGhostReward,ghostDistanceReward, freedomReward, chaseReward, foodDistanceReward)
     #print "ghostDistanceReward %i freedomReward %i chaseReward %i foodDistanceReward %i current score %i" %(ghostDistanceReward, freedomReward, chaseReward, foodDistanceReward, currentScore)
-    return 2*ghostDistanceReward + 4*foodDistanceReward + freedomReward + chaseReward + 4*currentScore + lastScore
+    return 2*ghostDistanceReward + 4*foodDistanceReward + currentScore + lastScore
 
   #if currentGameState.isLose():
   #  return -float("inf")
@@ -510,7 +520,7 @@ def betterEvaluationFunction(currentGameState):
 
 # Abbreviation
 better = betterEvaluationFunction
-
+#better = testfunc
 class ContestAgent(MultiAgentSearchAgent):
   """
     Your agent for the mini-contest
