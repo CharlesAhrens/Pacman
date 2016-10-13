@@ -348,7 +348,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
 
 
 def betterEvaluationFunction(currentGameState):
-  """
+    """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 5).
 
@@ -363,92 +363,147 @@ def betterEvaluationFunction(currentGameState):
         get distances to active ghosts, farther is better
 
         each value is weighted and total is returned
-  """
-  "*** YOUR CODE HERE ***"
+    """
+    "*** YOUR CODE HERE ***"
+    # Useful information you can extract from a GameState (pacman.py)
 
-  if currentGameState.isLose():
-    return -float("inf")
-  elif currentGameState.isWin():
-    return float("inf")
+    currentPos = currentGameState.getPacmanPosition()
+    currentScore = scoreEvaluationFunction(currentGameState)
+    ghostStates = currentGameState.getGhostStates()
 
-  currentPosition = currentGameState.getPacmanPosition()
+    if currentGameState.isLose():
+        return -float("inf")
+    elif currentGameState.isWin():
+        return +float("inf")
 
-  currentScore = scoreEvaluationFunction(currentGameState)
+    scaredTimes = [ghostState.scaredTimer for ghostState in ghostStates]
 
-  ##########
-  #  Food  #
-  ##########
+    food = currentGameState.getFood().asList()
 
-  food = currentGameState.getFood().asList()
+    lastScore = 0
+    if len(food) == 1:
+        lastScore = 10000
 
+    ghostPosition = [ x.getPosition() for x in ghostStates]
+    ghostPosTime = zip(ghostPosition, scaredTimes)
 
-  foodDist= map(lambda x: 1.0 / manhattanDistance(x, currentPosition), food)
-  foodScore = max(foodDist + [0])
+    ghostDistances = [ manhattanDistance(currentPos, pos) for (pos, time) in ghostPosTime if time == 0]
 
-  powerPellets = currentGameState.getCapsules()
+    #totalDistance = sum(newGhostDistances)
+    ghostDistanceReward = 0
 
-  ##########
-  # Ghosts #
-  ##########
+    if len(ghostDistances) > 0:
+        ghostDistanceReward = 100*-1.0/min(ghostDistances)
 
-  ghostStates = currentGameState.getGhostStates()
+    ghostScaredTimes = [time for (pos, time) in ghostPosTime if time > 0 ]
 
-  active = [0]
-  activePosition = []
-
-  scared = [0]
-  scaredPosition = []
-
-  closestActiveGhost = float("inf")
-  closestScaredGhost = 0
-
-  scaredTime = []
-
-  activeScore = 0
-  scaredScore = 0
-
-  for ghost in ghostStates:
-    if ghost.scaredTimer > 0:
-        scared.append(ghost)
-        scaredTime.append(ghost.scaredTimer)
-        scaredPosition.append(ghost.getPosition())
-
+    if len(ghostScaredTimes) != 0:
+        freedomTime = min(ghostScaredTimes)
     else:
-        active.append(ghost)
-        activePosition.append(ghost.getPosition())
+        freedomTime = 0
+    freedomReward = 20*freedomTime
 
-  activeGhostDistances = [ manhattanDistance(currentPosition, pos) for pos in activePosition]
-  scaredGhostDistances = [ manhattanDistance(currentPosition, pos) for pos in scaredPosition]
-
-  if len(activeGhostDistances)>0:
-    closestActiveGhost = min(activeGhostDistances)
-  else:
-    closestActiveGhost = float("inf")
+    chaseGhostPosTime = [float(time) - manhattanDistance(currentPos, pos) for (pos, time) in ghostPosTime if time > 0]
+    chaseReward = 0
+    if len(chaseGhostPosTime) > 0:
+        chaseReward = 100 * max(chaseGhostPosTime)
 
 
-  if len(scaredGhostDistances)>0:
-    closestScaredGhost = min(scaredGhostDistances)
-  else:
-    closestScaredGhost = 0
+    foodSearchProblem = searchAgents.AnyFoodSearchProblem(currentGameState)
+    distanceToFood = search.bfs(foodSearchProblem)
+    if distanceToFood == None:
+        foodDistanceReward = 0
+    else:
+        foodDistanceReward = 10/len(distanceToFood)
 
-  averageScaredGhostTime = sum(list(scaredTime))/len(scared)
 
-  def calculateScoreBasedOnGhosts(ghostStates, pacmanPos):
-    score = 0
-    for ghost in ghostStates:
-        ghostScaredTime = ghost.scaredTimer
-        distanceToGhost = manhattanDistance(pacmanPos, ghost.getPosition())
-        if ghostScaredTime <= 0:
-            score -= pow(max(7 - distanceToGhost, 0), 2)
-        else:
-            score += pow(max(8 - distanceToGhost, 0), 2)
-    return score
+    #print "pos %s action %s ateFoodReward %i eatenByGhost %i ghostDistanceReward %i freedomReward %i chaseReward %i foodDistanceReward %i" %(currentGameState.getPacmanPosition(),action,ateFoodReward,eatenByGhostReward,ghostDistanceReward, freedomReward, chaseReward, foodDistanceReward)
+    print "ghostDistanceReward %i freedomReward %i chaseReward %i foodDistanceReward %i current score %i" %(ghostDistanceReward, freedomReward, chaseReward, foodDistanceReward, currentScore)
+    return 2*ghostDistanceReward + 2*foodDistanceReward + freedomReward + chaseReward + 4*currentScore + lastScore
 
-  ghostScore = calculateScoreBasedOnGhosts(ghostStates, currentPosition)
+  #if currentGameState.isLose():
+  #  return -float("inf")
+  #elif currentGameState.isWin():
+  #  return float("inf")
 
-  ##########
-  return currentScore + ghostScore  + foodScore
-  #return 5*currentScore + -2/len(food)+ -4/foodDist + -3*len(powerPellets) + -5/closestActiveGhost + 2.0*closestScaredGhost
+  #currentPosition = currentGameState.getPacmanPosition()
+
+  #currentScore = scoreEvaluationFunction(currentGameState)
+
+  ###########
+  ##  Food  #
+  ###########
+
+  #food = currentGameState.getFood().asList()
+
+  #foodDist= map(lambda x: 1.0 / manhattanDistance(x, currentPosition), food)
+  #foodScore = max(foodDist + [0])
+
+  #powerPellets = currentGameState.getCapsules()
+
+  ###########
+  ## Ghosts #
+  ###########
+
+  #ghostStates = currentGameState.getGhostStates()
+
+  #active = [0]
+  #activePosition = []
+
+  #scared = [0]
+  #scaredPosition = []
+
+  #closestActiveGhost = float("inf")
+  #closestScaredGhost = 0
+
+  #scaredTime = []
+
+  #activeScore = 0
+  #scaredScore = 0
+
+  #for ghost in ghostStates:
+  #  if ghost.scaredTimer > 0:
+  #      scared.append(ghost)
+  #      scaredTime.append(ghost.scaredTimer)
+  #      scaredPosition.append(ghost.getPosition())
+
+  #  else:
+  #      active.append(ghost)
+  #      activePosition.append(ghost.getPosition())
+
+  #activeGhostDistances = [ manhattanDistance(currentPosition, pos) for pos in activePosition]
+  #scaredGhostDistances = [ manhattanDistance(currentPosition, pos) for pos in scaredPosition]
+
+  #if len(activeGhostDistances)>0:
+  #  closestActiveGhost = min(activeGhostDistances)
+  #else:
+  #  closestActiveGhost = float("inf")
+
+  #if len(scaredGhostDistances)>0:
+  #  closestScaredGhost = min(scaredGhostDistances)
+  #else:
+  #  closestScaredGhost = 0
+
+  #averageScaredGhostTime = sum(list(scaredTime))/len(scared)
+
+
+
+  #def calculateScoreBasedOnGhosts(ghostStates, pacmanPos):
+  #  score = 0
+  #  for ghost in ghostStates:
+  #      ghostScaredTime = ghost.scaredTimer
+  #      distanceToGhost = manhattanDistance(pacmanPos, ghost.getPosition())
+  #      if ghostScaredTime <= 0:
+  #          score -= pow(max(7 - distanceToGhost, 0), 2)
+  #      else:
+  #          score += pow(max(8 - distanceToGhost, 0), 2)
+  #  return score
+
+  #ghostScore = calculateScoreBasedOnGhosts(ghostStates, currentPosition)
+
+  ###########
+  #return currentScore + ghostScore  + foodScore
+  ##return 5*currentScore + -2/len(food)+ -4/foodDist + -3*len(powerPellets) + -5/closestActiveGhost + 2.0*closestScaredGhost
 
 
 
@@ -471,3 +526,4 @@ class ContestAgent(MultiAgentSearchAgent):
     """
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
+    
