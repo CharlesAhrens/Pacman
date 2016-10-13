@@ -176,52 +176,41 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns the total number of agents in the game
     """
     "*** YOUR CODE HERE ***"
-    #handle pacman
-    numberOfAgents = gameState.getNumAgents()
-    filterStop = lambda x: x != Directions.STOP
-    maxDepth = self.depth
-    def maxValue(index, depth, gameState):
-        #print(" ")
-        #print("max")
-        if depth >= maxDepth:
+    def minimax(gameState, depth, index):
+        if depth == 0 or gameState.isWin() or gameState.isLose():
             return self.evaluationFunction(gameState)
-        currentScore = self.evaluationFunction(gameState)
-        for action in filter(filterStop, gameState.getLegalActions(index)):
-            nextGameState = gameState.generateSuccessor(index, action)
-            nextIndex = (index +1) % numberOfAgents
-            score = minValue(nextIndex, depth+1, nextGameState)
-            currentScore = max(score, currentScore)
-        return currentScore
-
-
-    def minValue(index, depth, gameState):
-        #print(" ")
-        #print("min")
-
-        if depth >= maxDepth:
-            return self.evaluationFunction(gameState)
-        #currentScore = float("inf")
-        currentScore = self.evaluationFunction(gameState)
-        for action in  gameState.getLegalActions(index):
-            nextGameState = gameState.generateSuccessor(index, action)
-            nextIndex = (index +1) % numberOfAgents
-            if nextIndex == 0:
-                score = maxValue(nextIndex, depth+1, nextGameState)
-            else:
-                score = minValue(nextIndex, depth+1, nextGameState)
-            currentScore = min(score, currentScore)
-        return currentScore
-
+        if index == 0:
+            value = -float("inf")
+            for action in gameState.getLegalActions(index):
+                nextGameState = gameState.generateSuccessor(index, action)
+                nextIndex = (index + 1) % numberOfAgents
+                value = max(value, minimax(nextGameState, depth, nextIndex))
+            return value
+        elif index == numberOfAgents-1:
+            value = float("inf")
+            for action in gameState.getLegalActions(index):
+                nextGameState = gameState.generateSuccessor(index, action)
+                nextIndex = (index + 1) % numberOfAgents
+                value = min(value, minimax(nextGameState, depth -1, nextIndex))
+            return value
+        else:
+            value = float("inf")
+            for action in gameState.getLegalActions(index):
+                nextGameState = gameState.generateSuccessor(index, action)
+                nextIndex = (index + 1) % numberOfAgents
+                value = min(value, minimax(nextGameState, depth, nextIndex))
+            return value
     bestScore = -float("inf")
     bestAction = Directions.STOP
-    for action in filter(filterStop, gameState.getLegalActions(0)):
-       nextGameState = gameState.generateSuccessor(0, action)
-       score = minValue(1, 0, nextGameState)
-
-       if score > bestScore:
+    for action in gameState.getLegalActions(0):
+        nextGameState = gameState.generateSuccessor(0, action)
+        score = minimax(nextGameState, self.depth,  1)
+        if score > bestScore:
             bestScore = score
             bestAction = action
     return bestAction
+
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
   """
@@ -305,41 +294,38 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     filterStop = lambda x: x != Directions.STOP
     maxDepth = self.depth
 
-    def value(index, depth, gameState):
-        if depth >= maxDepth:
-            return (self.evaluationFunction(gameState))
+    def expectimax(gameState, depth, index):
+        if depth == 0 or gameState.isWin() or gameState.isLose():
+            return self.evaluationFunction(gameState)
+        legalActions = gameState.getLegalActions(index)
+        p = 1.0/len(legalActions)
         if index == 0:
-            return maxValue(index, depth, gameState)
+            value = -float("inf")
+            for action in legalActions:
+                nextGameState = gameState.generateSuccessor(index, action)
+                nextIndex = (index + 1) % numberOfAgents
+                value = max(value, expectimax(nextGameState, depth, nextIndex))
+            return value
+        elif index == numberOfAgents-1:
+            value = 0
+            for action in legalActions:
+                nextGameState = gameState.generateSuccessor(index, action)
+                nextIndex = (index + 1) % numberOfAgents
+                value += p * expectimax(nextGameState, depth -1, nextIndex)
+            return value
         else:
-            return expValue(index,depth, gameState)
-
-    def maxValue(index, depth, gameState):
-        currentScore = -float("inf")
-        actions = filter(filterStop, gameState.getLegalActions(index))
-        for action in actions:
-            nextGameState = gameState.generateSuccessor(index, action)
-            nextIndex = (index + 1) % numberOfAgents
-            score = value(nextIndex, depth+1, gameState)
-            currentScore = max(score)
-        return currentScore
-
-    def expValue(index, depth, gameState):
-        currentScore = 0
-        actions = gameState.getLegalActions(index)
-        for action in actions:
-            nextGameState = gameState.generateSuccessor(index, action)
-            nextIndex = (index + 1) % numberOfAgents
-            p = 1/float(len(actions))
-            score = value(nextIndex, depth+1, gameState)
-            currentScore = currentScore + p * score
-        return currentScore
-
+            value = 0
+            for action in legalActions:
+                nextGameState = gameState.generateSuccessor(index, action)
+                nextIndex = (index + 1) % numberOfAgents
+                value += p * expectimax(nextGameState, depth, nextIndex)
+            return value
     bestScore = -float("inf")
     bestAction = Directions.STOP
-    for action in filter(filterStop, gameState.getLegalActions(0)):
-       nextGameState = gameState.generateSuccessor(0, action)
-       score = value(1, 1, nextGameState)
-       if score > bestScore:
+    for action in gameState.getLegalActions(0):
+        nextGameState = gameState.generateSuccessor(0, action)
+        score = expectimax(nextGameState, self.depth,  1)
+        if score > bestScore:
             bestScore = score
             bestAction = action
     return bestAction
@@ -526,4 +512,3 @@ class ContestAgent(MultiAgentSearchAgent):
     """
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
-    
